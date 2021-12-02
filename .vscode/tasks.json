@@ -1,0 +1,33 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "shell",
+			"command": "cargo aoc",
+			"problemMatcher": [
+				"$rustc"
+			],
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"label": "Rust: cargo aoc build"
+		},
+		{
+			"type": "shell",
+			"command": "cargo aoc bench",
+			"problemMatcher": [
+				"$rustc"
+			],
+			"label": "Rust: cargo aoc bench"
+		},
+		{
+			"type": "cargo",
+			"subcommand": "test",
+			"problemMatcher": [
+				"$rustc"
+			],
+			"label": "Rust: run tests"
+		}
+	]
+}
