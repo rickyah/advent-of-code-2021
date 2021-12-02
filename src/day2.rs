@@ -46,7 +46,22 @@ pub fn compute_day2_part1(coords : &Vec<Coord>) -> i32 {
 
 #[aoc(day2, part2)]
 pub fn compute_day2_part2(coords : &Vec<Coord>) -> i32 {
-	return 0;
+
+	let mut aim = 0;
+	let mut depth = 0;
+	let mut forward = 0;
+	
+	for coord in coords {
+		if coord.x > 0 {
+			forward = forward + coord.x;
+			depth = depth + (aim * coord.x);
+		}
+		else {
+			aim = aim + coord.depth
+		}
+	}
+
+	return depth * forward;
 }
 
 #[cfg(test)]
@@ -82,5 +97,6 @@ forward 2";
 
 	#[test]
 	fn test_day2_part2() {
+		assert_eq!(compute_day2_part2(&input_coords.to_vec()), 900);
 	}
 }
