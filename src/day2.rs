@@ -3,10 +3,12 @@ use aoc_runner_derive::aoc_generator;
 
 #[derive(Debug)]
 #[derive(PartialEq)]
+#[derive(Clone)]
 pub struct Coord {
 	x: i32,
 	depth: i32
 }
+
 
 #[aoc_generator(day2)]
 pub fn parser(input: &str) -> Vec<Coord> {
@@ -20,19 +22,26 @@ pub fn parser(input: &str) -> Vec<Coord> {
 		let command = line_elements[0];
 		let value = line_elements[1].parse::<i32>().unwrap();
 
-		match command {
-			"forward" => result.push(Coord { x: value, depth: 0 }),
-			"down" => result.push(Coord {x: 0, depth: value} ),
-			"up" => result.push(Coord {x: 0, depth: -value} ),
+		let coord = match command {
+			"forward" => Coord { x: value, depth: 0 },
+			"down" => Coord {x: 0, depth: value} ,
+			"up" =>Coord {x: 0, depth: -value},
 			_ => panic!("Unknown command {}", command),
-		}
+		};
+
+		result.push(coord)
 	}
 	return result;
 }
 
 #[aoc(day2, part1)]
 pub fn compute_day2_part1(coords : &Vec<Coord>) -> i32 {
-	return 0;
+
+	let result : Coord =  coords.iter().fold(Coord { x: 0, depth: 0 }, |c1, c2| Coord {
+		x: c1.x + c2.x,
+		depth: c1.depth + c2.depth,
+	});
+	return result.depth * result.x;
 }
 
 #[aoc(day2, part2)]
@@ -68,6 +77,7 @@ forward 2";
 
 	#[test]
 	fn test_day2_part1() {
+		assert_eq!(compute_day2_part1(&input_coords.to_vec()), 150);
 	}
 
 	#[test]
