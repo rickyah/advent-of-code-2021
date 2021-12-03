@@ -68,14 +68,14 @@ pub fn compute_day2_part2(coords : &Vec<Coord>) -> i32 {
 mod tests {
 	use super::*;
 	
-	const input_literal : &str = "forward 5
+	const INPUT_LITERAL : &str = "forward 5
 down 5
 forward 8
 up 3
 down 8
 forward 2";
 
-	const input_coords : [Coord;6] = [
+	const INPUT_COORDS : [Coord;6] = [
 		Coord{ x:5 , depth:0 },
 		Coord{ x:0 , depth:5 },
 		Coord{ x:8 , depth:0 },
@@ -85,18 +85,17 @@ forward 2";
 	];
 	#[test]
 	fn test_day2_parser() {
-		let coords = parser(input_literal);
-
-		assert_eq!(&coords[..], &input_coords[..]);
+		let coords = parser(INPUT_LITERAL);
+		assert_eq!(&coords[..], &INPUT_COORDS[..]);
 	}
 
 	#[test]
 	fn test_day2_part1() {
-		assert_eq!(compute_day2_part1(&input_coords.to_vec()), 150);
+		assert_eq!(compute_day2_part1(&INPUT_COORDS.to_vec()), 150);
 	}
 
 	#[test]
 	fn test_day2_part2() {
-		assert_eq!(compute_day2_part2(&input_coords.to_vec()), 900);
+		assert_eq!(compute_day2_part2(&INPUT_COORDS.to_vec()), 900);
 	}
 }
