@@ -69,12 +69,9 @@ fn compute_power_consumption_rates(set_bits: Vec<u32>, total_numbers: usize) -> 
 	return PowerConsumptionRates {gamma: gamma, epsilon: epsilon}; 
 }
 
-
 pub fn count_set_bits_by_position(input : &ParsedInput) -> Vec<u32> {
-	
 	let num_bits = input.num_bits as usize;
 	let mut bit_set_positions = vec! [0; num_bits];
-
 
 	for number in &input.numbers {
 		for idx in 0..num_bits {
@@ -167,6 +164,6 @@ mod tests {
 			numbers:  INPUT_NUMBERS.iter().map(|n| *n).collect(),
 		};
 
-		assert_eq!(compute_day3_part2(&input), 198);
+		assert_eq!(compute_day3_part2(&input), 230);
 	}
 }
