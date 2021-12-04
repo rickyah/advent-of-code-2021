@@ -26,11 +26,11 @@ pub struct LifeSupportRates {
 
 #[aoc_generator(day3)]
 pub fn parse(input: &str) -> ParsedInput {
-	let firstLine = input.lines().next().unwrap().len();
+	let first_line_chars_num = input.lines().next().unwrap().len();
 	let numbers = input.lines().map( |line| u32::from_str_radix(&line, 2).unwrap()).collect();
 
 	return ParsedInput {
-		num_bits: firstLine as u32,
+		num_bits: first_line_chars_num as u32,
 		numbers: numbers
 	} 
 }
