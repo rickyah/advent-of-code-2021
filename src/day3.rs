@@ -46,8 +46,61 @@ pub fn compute_day3_part1(input : &ParsedInput) -> u32 {
 
 #[aoc(day3, part2)]
 pub fn compute_day3_part2(input : &ParsedInput) -> u32 {
-	
-	return 0;
+	let mut oxygen_working_set = input.numbers.clone();
+	let mut co2_working_set = input.numbers.clone();
+	let num_bits = input.num_bits as usize;
+
+	while oxygen_working_set.len() > 1 {
+		for idx in (0..num_bits).rev() {
+			// Keep separate list for elements with the current bit position set or unset 
+			let mut elements_with_bit_unset : Vec<u32> = Vec::with_capacity(oxygen_working_set.len());
+			let mut elements_with_bit_set : Vec<u32> = Vec::with_capacity(oxygen_working_set.len());
+
+			for number in oxygen_working_set {
+				if number & (1 << idx) != 0 {
+					elements_with_bit_set.push(number);
+				} else {
+					elements_with_bit_unset.push(number);
+				}
+			}
+
+			if elements_with_bit_set.len() > elements_with_bit_unset.len() {
+				oxygen_working_set = elements_with_bit_set.clone();
+			} else if elements_with_bit_unset.len() > elements_with_bit_set.len() {
+				oxygen_working_set = elements_with_bit_unset.clone();
+			} else {
+				oxygen_working_set = elements_with_bit_set.clone();
+			}
+
+			if oxygen_working_set.len() == 1 { break; }
+		}
+	}
+	while co2_working_set.len() > 1 {
+		for idx in (0..num_bits).rev() {
+			let mut elements_with_bit_unset : Vec<u32> = Vec::with_capacity(co2_working_set.len());
+			let mut elements_with_bit_set : Vec<u32> = Vec::with_capacity(co2_working_set.len());
+
+			for number in co2_working_set {
+				if number & (1 << idx) != 0 {
+					elements_with_bit_set.push(number);
+				} else {
+					elements_with_bit_unset.push(number);
+				}
+			}
+
+			if elements_with_bit_set.len() < elements_with_bit_unset.len() {
+				co2_working_set = elements_with_bit_set.clone();
+			} else if elements_with_bit_unset.len() < elements_with_bit_set.len() {
+				co2_working_set = elements_with_bit_unset.clone();
+			} else {
+				co2_working_set = elements_with_bit_unset.clone();
+			}
+
+			if co2_working_set.len() == 1 { break; }
+		}
+	}
+
+	return co2_working_set[0] * oxygen_working_set[0];
 }
 
 fn compute_power_consumption_rates(set_bits: Vec<u32>, total_numbers: usize) -> PowerConsumptionRates {
@@ -55,10 +108,10 @@ fn compute_power_consumption_rates(set_bits: Vec<u32>, total_numbers: usize) -> 
 	let half_numbers = (total_numbers / 2) as u32;
 	let mut gamma = 0;
 	let mut epsilon = 0;
-	for (idx, bit_count) in set_bits.iter().enumerate() {
 
+	for (idx, bit_count) in set_bits.iter().enumerate() {
 		let idx = set_bits.len() - idx -1;
-		let bit_position = (1 << idx);
+		let bit_position = 1 << idx;
 		if *bit_count > half_numbers {
 			gamma = gamma | bit_position ;
 		} else {
