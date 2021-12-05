@@ -18,12 +18,6 @@ pub struct PowerConsumptionRates {
 	epsilon : u32
 }
 
-pub struct LifeSupportRates {
-	oxygen_generator : u32,
-	co2_scrubble : u32
-}
-
-
 #[aoc_generator(day3)]
 pub fn parse(input: &str) -> ParsedInput {
 	let first_line_chars_num = input.lines().next().unwrap().len();
