@@ -185,12 +185,12 @@ mod tests {
 	#[test]
 	fn test_12_bits_str_to_int32()
 	{
-		const num_5 : i32 = 0b0000_0000_0101;
-		const str_num_5 : &str = "000000000101";
+		const NUM_5 : i32 = 0b0000_0000_0101;
+		const STR_NUM_5 : &str = "000000000101";
 
-		assert_eq!(num_5, 5 as i32);
-		let parsed = i32::from_str_radix(str_num_5, 2).unwrap();
-		assert_eq!(parsed, num_5);
+		assert_eq!(NUM_5, 5 as i32);
+		let parsed = i32::from_str_radix(STR_NUM_5, 2).unwrap();
+		assert_eq!(parsed, NUM_5);
 	}
 	#[test]
 	fn test_day3_parser() {
