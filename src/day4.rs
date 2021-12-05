@@ -152,13 +152,14 @@ pub fn mark_number_in_boards(
 	}
 }
 
+
 pub fn is_cardboard_winner(board_marks:u32) -> bool {
 	const ROW_MASK : u32 = 0b00000000_00000000_00000000_00011111;
-	const COL_MASK : u32 = 0b00001000_10000100_01000010_00100001;
+	const COL_MASK : u32 = 0b00000000_00010000_10000100_00100001;
 
 	for idx in 0..5 {
 		let row_mask = ROW_MASK << 5 * idx;
-		let col_mask = COL_MASK << 5 * idx;
+		let col_mask = COL_MASK << idx;
 
 		if (board_marks & row_mask) == row_mask { return true; } 
 		else if (board_marks & col_mask) == col_mask { return true; }
