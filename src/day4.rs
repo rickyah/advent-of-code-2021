@@ -11,7 +11,7 @@ pub struct Input {
 	// Sequence of simulated randomly generated numbres
 	drawn_numbers : Vec<u8>,
 	// List of cardboards, each represented as a linear vector instead of a matrix
-	cards : Vec<[u8;25]>,
+	cardboards : Vec<[u8;25]>,
 	// Hashmap number => [ (board index, number position in board) ]
 	// This hashmap will help us mark the boards faster, as for any drawn number
 	// we'll have a fast look up to get the boards and positions where that 
@@ -74,7 +74,7 @@ pub fn parser(input: &str) -> Input {
 	}
 
 	return Input {
-		cards: cards,
+		cardboards: cards,
 		drawn_numbers: sequence,
 		numbers_in_boards: hmap
 	};
@@ -83,7 +83,7 @@ pub fn parser(input: &str) -> Input {
 // How many measurements are larger than the previous measurement?
 #[aoc(day4, part1)]
 pub fn solve_part1(input:&Input) -> u32 {
-	let mut marks_in_boards = vec![0_u32; input.cards.len()];
+	let mut marks_in_boards = vec![0_u32; input.cardboards.len()];
 
 	for (idx, num) in input.drawn_numbers.iter().enumerate() {
 		// println!("idx: {}, num:{}", idx, num);
@@ -91,16 +91,16 @@ pub fn solve_part1(input:&Input) -> u32 {
 		
 		mark_number_in_boards(&mut marks_in_boards, number_to_boards_map);
 
-		match find_winner_board_card(&marks_in_boards) {
+		match find_first_winner_cardboard(&marks_in_boards) {
 			Some(board_idx) => {
 
-				let board_card = &input.cards[board_idx];
-				let board_marks = marks_in_boards[board_idx];
+				let cardboard = &input.cardboards[board_idx];
+				let cardboard_marks = marks_in_boards[board_idx];
 
-				println!("board idx: {}, marks {:b}", board_idx, board_marks);
-				print_board(board_card, board_marks);
+				println!("board idx: {}, marks {:b}", board_idx, cardboard_marks);
+				print_board(cardboard, cardboard_marks);
 
-				let sum = sum_board_unmarked_positions(board_card, board_marks);
+				let sum = sum_board_unmarked_positions(cardboard, cardboard_marks);
 				let num = (*num as u32);
 				let result : u32 = sum * num;
 				return result;
@@ -152,18 +152,26 @@ pub fn mark_number_in_boards(
 	}
 }
 
-pub fn find_winner_board_card(boards: &Vec<u32>) -> Option<usize> {
+pub fn is_cardboard_winner(board_marks:u32) -> bool {
+	const ROW_MASK : u32 = 0b00000000_00000000_00000000_00011111;
+	const COL_MASK : u32 = 0b00001000_10000100_01000010_00100001;
+
+	for idx in 0..5 {
+		let row_mask = ROW_MASK << 5 * idx;
+		let col_mask = COL_MASK << 5 * idx;
+
+		if (board_marks & row_mask) == row_mask { return true; } 
+		else if (board_marks & col_mask) == col_mask { return true; }
+	}
+	return false;
+}
+
+pub fn find_first_winner_cardboard(boards: &Vec<u32>) -> Option<usize> {
 	const ROW_MASK : u32 = 0b00000000_00000000_00000000_00011111;
 	const COL_MASK : u32 = 0b00001000_10000100_01000010_00100001;
 
 	for (board_idx, board) in boards.iter().enumerate() {
-		for idx in 0..5 {
-			let row_mask = ROW_MASK << 5 * idx;
-			let col_mask = COL_MASK << 5 * idx;
-
-			if (board & row_mask) == row_mask { return Option::Some(board_idx); }
-			if (board & col_mask) == col_mask { return Option::Some(board_idx); }
-		}
+		if is_cardboard_winner(*board) { return Option::Some(board_idx); }
 	}
 	return Option::None;
 }
@@ -199,7 +207,7 @@ const INPUT_LITERAL : &str = "7,4,9,5,11,17,23,2,0,14,21,24,10,16,13,6,15,25,12,
 		let input = parser(&INPUT_LITERAL);
 
 		assert_eq!(input.drawn_numbers, vec![7,4,9,5,11,17,23,2,0,14,21,24,10,16,13,6,15,25,12,22,18,20,8,19,3,26,1]);
-		assert_eq!(input.cards.len(), 3);
+		assert_eq!(input.cardboards.len(), 3);
 
 		// Numbers for the test are in the range 0..=26,
 		// for a total of 27 values
