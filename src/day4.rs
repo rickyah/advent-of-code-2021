@@ -2,7 +2,7 @@ use aoc_runner_derive::aoc;
 use aoc_runner_derive::aoc_generator;
 use std::collections::HashMap;
 
-//  https://adventofcode.com/2021/day/4
+// https://adventofcode.com/2021/day/4
 
 type BoardIndex = u32;
 type PositionInBoardIndex = u8;
@@ -63,9 +63,8 @@ pub fn parser(input: &str) -> Input {
 		.map(|s| u8::from_str_radix(s, 10).unwrap())
 		.collect();
 
-	// Read card boards data and process numbers into a hashmap
+	// Read bingo card data and process numbers into a hashmap
 	// We will generate the lookup hashmap here too 
-	// (see Input::numbers_in_boards)
 	let mut hmap = HashMap::new();
 
 	// Save the numbers of all the cards read
@@ -126,12 +125,12 @@ pub fn solve_part1(input:&Input) -> u32 {
 		
 		mark_number_in_boards(&mut marks_in_boards, number_to_boards_map);
 
-		match find_first_completed_cardboard(&marks_in_boards) {
-			Some(cardboard_idx) => {
-				let cardboard = &input.bingo_cards[cardboard_idx];
-				let cardboard_marks = marks_in_boards[cardboard_idx];
+		match find_first_completed_bingo_card(&marks_in_boards) {
+			Some(board_idx) => {
+				let bingo_card = &input.bingo_cards[board_idx];
+				let bingo_card_marks = marks_in_boards[board_idx];
 
-				let sum = sum_board_unmarked_numbers(cardboard, cardboard_marks);
+				let sum = sum_board_unmarked_numbers(bingo_card, bingo_card_marks);
 				let num = *num as u32;
 				let result : u32 = sum * num;
 				return result;
@@ -144,43 +143,41 @@ pub fn solve_part1(input:&Input) -> u32 {
 
 #[aoc(day4, part2)]
 pub fn solve_part2(input:&Input) -> u32 {
-	let cardboards_len = input.bingo_cards.len();
+	let bingo_cards_len = input.bingo_cards.len();
 
-	// We represents the marks in a board with a u32 number, where each bit
-	// is a number position in the bingo board
-	// See: fn mark_number_in_boards
-	let mut marks_in_boards = vec![0_u32;cardboards_len];
+	// We represents the marks in a board with a u32 number
+	let mut marks_in_boards = vec![0_u32;bingo_cards_len];
 
-	// We will use this vector to mark the index of cardboards as completed 
+	// We will use this vector to mark the index of bingo cards as completed 
 	// and avoid reprocessing
-	let mut not_completed_cardboards_flags = vec![false;cardboards_len];
+	let mut not_completed_bingo_cards_flags = vec![false;bingo_cards_len];
 
 	for num in &input.drawn_numbers {
 		let number_to_boards_map = input.numbers_in_cards.get(&num).unwrap();
 
 		mark_number_in_boards(&mut marks_in_boards, number_to_boards_map);
 
-		for cardboard_idx in 0..cardboards_len {
-			// do not re-process cardboads marked as completed
-			if not_completed_cardboards_flags[cardboard_idx] == true { 
+		for bingo_card_idx in 0..bingo_cards_len {
+			// do not re-process bingo card marked as completed
+			if not_completed_bingo_cards_flags[bingo_card_idx] == true { 
 				continue;
 			}
 	
-			// Mark cardboard as winner
-			if is_cardboard_completed(marks_in_boards[cardboard_idx]) { 
-				not_completed_cardboards_flags[cardboard_idx] = true;
+			// Mark bingo card as winner
+			if is_bingo_card_completed(marks_in_boards[bingo_card_idx]) { 
+				not_completed_bingo_cards_flags[bingo_card_idx] = true;
 			}
-			let completed_count = not_completed_cardboards_flags
+			let completed_count = not_completed_bingo_cards_flags
 				.iter()
 				.filter(|x| **x == true)
 				.count();
 
-			// Check if it is the last cardboard
-			if completed_count == cardboards_len {
-				let cardboard = &input.bingo_cards[cardboard_idx];
-				let cardboard_marks = marks_in_boards[cardboard_idx];
+			// Check if it is the last bingo card
+			if completed_count == bingo_cards_len {
+				let bingo_card = &input.bingo_cards[bingo_card_idx];
+				let bingo_card_marks = marks_in_boards[bingo_card_idx];
 
-				let sum = sum_board_unmarked_numbers(cardboard, cardboard_marks);
+				let sum = sum_board_unmarked_numbers(bingo_card, bingo_card_marks);
 				let num = *num as u32;
 				let result : u32 = sum * num;
 				return result;
@@ -231,7 +228,7 @@ pub fn mark_number_in_boards(
 	}
 }
 
-pub fn is_cardboard_completed(board_marks:u32) -> bool {
+pub fn is_bingo_card_completed(board_marks:u32) -> bool {
 	const ROW_MASK : u32 = 0b00000000_00000000_00000000_00011111;
 	const COL_MASK : u32 = 0b00000000_00010000_10000100_00100001;
 
@@ -245,9 +242,9 @@ pub fn is_cardboard_completed(board_marks:u32) -> bool {
 	return false;
 }
 
-pub fn find_first_completed_cardboard(boards: &Vec<u32>) -> Option<usize> {
+pub fn find_first_completed_bingo_card(boards: &Vec<u32>) -> Option<usize> {
 	for (board_idx, board) in boards.iter().enumerate() {
-		if is_cardboard_completed(*board) { return Option::Some(board_idx); }
+		if is_bingo_card_completed(*board) { return Option::Some(board_idx); }
 	}
 	return Option::None;
 }
@@ -313,7 +310,7 @@ const INPUT_LITERAL : &str = "7,4,9,5,11,17,23,2,0,14,21,24,10,16,13,6,15,25,12,
 
 	#[test]
 	fn test_winning_condition() {
-		assert_eq!(is_cardboard_completed(0b11111110101001110101100), true);
+		assert_eq!(is_bingo_card_completed(0b11111110101001110101100), true);
 	}
 	
 }
