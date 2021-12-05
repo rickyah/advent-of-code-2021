@@ -10,18 +10,19 @@ type PositionInBoardIndex = u8;
 pub struct Input {
 	// Sequence of simulated randomly generated numbres
 	drawn_numbers : Vec<u8>,
-	// List of cardboards, each represented as a linear vector instead of a matrix
-	cardboards : Vec<[u8;25]>,
+	// List of bingo gards, each represented as a linear vector
+	// instead of a matrix
+	bingo_cards : Vec<[u8;25]>,
 	// Hashmap number => [ (board index, number position in board) ]
 	// This hashmap will help us mark the boards faster, as for any drawn number
 	// we'll have a fast look up to get the boards and positions where that 
 	// number appeared
-	numbers_in_boards : HashMap<u8, Vec<(BoardIndex, PositionInBoardIndex)>>
+	numbers_in_cards : HashMap<u8, Vec<(BoardIndex, PositionInBoardIndex)>>
 }
+
 
 #[aoc_generator(day4)]
 pub fn parser(input: &str) -> Input {
-	
 	let mut lines = input.lines();
 
 	// Read list of drawn numbers
@@ -74,34 +75,32 @@ pub fn parser(input: &str) -> Input {
 	}
 
 	return Input {
-		cardboards: cards,
+		bingo_cards: cards,
 		drawn_numbers: sequence,
-		numbers_in_boards: hmap
+		numbers_in_cards: hmap
 	};
 }
 
-// How many measurements are larger than the previous measurement?
 #[aoc(day4, part1)]
 pub fn solve_part1(input:&Input) -> u32 {
-	let mut marks_in_boards = vec![0_u32; input.cardboards.len()];
 
-	for (idx, num) in input.drawn_numbers.iter().enumerate() {
-		// println!("idx: {}, num:{}", idx, num);
-		let number_to_boards_map = input.numbers_in_boards.get(&num).unwrap();
+	// We represents the marks in a board with a u32 number, where each bit
+	// is a number position in the bingo board
+	// See: fn mark_number_in_boards
+	let mut marks_in_boards = vec![0_u32; input.bingo_cards.len()];
+
+	for num in &input.drawn_numbers {
+		let number_to_boards_map = input.numbers_in_cards.get(&num).unwrap();
 		
 		mark_number_in_boards(&mut marks_in_boards, number_to_boards_map);
 
-		match find_first_winner_cardboard(&marks_in_boards) {
-			Some(board_idx) => {
+		match find_first_completed_cardboard(&marks_in_boards) {
+			Some(cardboard_idx) => {
+				let cardboard = &input.bingo_cards[cardboard_idx];
+				let cardboard_marks = marks_in_boards[cardboard_idx];
 
-				let cardboard = &input.cardboards[board_idx];
-				let cardboard_marks = marks_in_boards[board_idx];
-
-				println!("board idx: {}, marks {:b}", board_idx, cardboard_marks);
-				print_board(cardboard, cardboard_marks);
-
-				let sum = sum_board_unmarked_positions(cardboard, cardboard_marks);
-				let num = (*num as u32);
+				let sum = sum_board_unmarked_numbers(cardboard, cardboard_marks);
+				let num = *num as u32;
 				let result : u32 = sum * num;
 				return result;
 			},
@@ -113,6 +112,7 @@ pub fn solve_part1(input:&Input) -> u32 {
 
 #[aoc(day4, part2)]
 pub fn solve_part2(input:&Input) -> u32 {
+
 	return 0;
 }
 
@@ -129,8 +129,11 @@ pub fn print_board(board: &[u8;25], marks:u32) {
 		}		
 	}
 	println!("");
+	println!("Marked positions mask: {:b}", marks);
+	println!("");
 }
-pub fn sum_board_unmarked_positions(board: &[u8;25], marks:u32) -> u32 {	
+
+pub fn sum_board_unmarked_numbers(board: &[u8;25], marks:u32) -> u32 {	
 	let mut sum = 0_u32;
 	
 	for (idx, num) in board.iter().enumerate() {
@@ -140,20 +143,20 @@ pub fn sum_board_unmarked_positions(board: &[u8;25], marks:u32) -> u32 {
 	}
 	return sum;
 }
+ 
 pub fn mark_number_in_boards(
-	boards: &mut Vec<u32>, 
-	positions: &Vec<(BoardIndex, PositionInBoardIndex)>) {
+	bingo_card_marks: &mut Vec<u32>,
+	number_positions_in_cards: &Vec<(BoardIndex, PositionInBoardIndex)>) {
 
-	for position in positions {
+	for position in number_positions_in_cards {
 		let (board_idx, position_idx) = position;
 		let board_idx = *board_idx as usize;
 		let mask = 1_u32 << position_idx;
-		boards[board_idx] = boards[board_idx] | mask;
+		bingo_card_marks[board_idx] = bingo_card_marks[board_idx] | mask;
 	}
 }
 
-
-pub fn is_cardboard_winner(board_marks:u32) -> bool {
+pub fn is_cardboard_completed(board_marks:u32) -> bool {
 	const ROW_MASK : u32 = 0b00000000_00000000_00000000_00011111;
 	const COL_MASK : u32 = 0b00000000_00010000_10000100_00100001;
 
@@ -167,16 +170,12 @@ pub fn is_cardboard_winner(board_marks:u32) -> bool {
 	return false;
 }
 
-pub fn find_first_winner_cardboard(boards: &Vec<u32>) -> Option<usize> {
-	const ROW_MASK : u32 = 0b00000000_00000000_00000000_00011111;
-	const COL_MASK : u32 = 0b00001000_10000100_01000010_00100001;
-
+pub fn find_first_completed_cardboard(boards: &Vec<u32>) -> Option<usize> {
 	for (board_idx, board) in boards.iter().enumerate() {
-		if is_cardboard_winner(*board) { return Option::Some(board_idx); }
+		if is_cardboard_completed(*board) { return Option::Some(board_idx); }
 	}
 	return Option::None;
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -207,19 +206,19 @@ const INPUT_LITERAL : &str = "7,4,9,5,11,17,23,2,0,14,21,24,10,16,13,6,15,25,12,
 		let input = parser(&INPUT_LITERAL);
 
 		assert_eq!(input.drawn_numbers, vec![7,4,9,5,11,17,23,2,0,14,21,24,10,16,13,6,15,25,12,22,18,20,8,19,3,26,1]);
-		assert_eq!(input.cardboards.len(), 3);
+		assert_eq!(input.bingo_cards.len(), 3);
 
 		// Numbers for the test are in the range 0..=26,
 		// for a total of 27 values
-		assert_eq!(input.numbers_in_boards.len(), 27);
+		assert_eq!(input.numbers_in_cards.len(), 27);
 		
-		let num_22 = input.numbers_in_boards.get(&22).unwrap();
+		let num_22 = input.numbers_in_cards.get(&22).unwrap();
 		assert_eq!(num_22.len(), 3);
 		assert_eq!(num_22[0], (0, 0));
 		assert_eq!(num_22[1], (1, 4));
 		assert_eq!(num_22[2], (2, 15));
 
-		let num_26 = input.numbers_in_boards.get(&26).unwrap();
+		let num_26 = input.numbers_in_cards.get(&26).unwrap();
 		assert_eq!(num_26.len(), 1);
 		assert_eq!(num_26[0], (2, 13));
 	}
@@ -235,6 +234,11 @@ const INPUT_LITERAL : &str = "7,4,9,5,11,17,23,2,0,14,21,24,10,16,13,6,15,25,12,
 		let input = parser(&INPUT_LITERAL);
 		let result = solve_part2(&input);
 		assert_eq!(result, 1924);
+	}
+
+	#[test]
+	fn test_winning_condition() {
+		assert_eq!(is_cardboard_completed(0b11111110101001110101100), true);
 	}
 	
 }
