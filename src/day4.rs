@@ -112,6 +112,49 @@ pub fn solve_part1(input:&Input) -> u32 {
 
 #[aoc(day4, part2)]
 pub fn solve_part2(input:&Input) -> u32 {
+	let cardboards_len = input.bingo_cards.len();
+
+	// We represents the marks in a board with a u32 number, where each bit
+	// is a number position in the bingo board
+	// See: fn mark_number_in_boards
+	let mut marks_in_boards = vec![0_u32;cardboards_len];
+
+	// We will use this vector to mark the index of cardboards as completed 
+	// and avoid reprocessing
+	let mut not_completed_cardboards_flags = vec![false;cardboards_len];
+
+	for num in &input.drawn_numbers {
+		let number_to_boards_map = input.numbers_in_cards.get(&num).unwrap();
+
+		mark_number_in_boards(&mut marks_in_boards, number_to_boards_map);
+
+		for cardboard_idx in 0..cardboards_len {
+			// do not re-process cardboads marked as completed
+			if not_completed_cardboards_flags[cardboard_idx] == true { 
+				continue;
+			}
+	
+			// Mark cardboard as winner
+			if is_cardboard_completed(marks_in_boards[cardboard_idx]) { 
+				not_completed_cardboards_flags[cardboard_idx] = true;
+			}
+			let completed_count = not_completed_cardboards_flags
+				.iter()
+				.filter(|x| **x == true)
+				.count();
+
+			// Check if it is the last cardboard
+			if completed_count == cardboards_len {
+				let cardboard = &input.bingo_cards[cardboard_idx];
+				let cardboard_marks = marks_in_boards[cardboard_idx];
+
+				let sum = sum_board_unmarked_numbers(cardboard, cardboard_marks);
+				let num = *num as u32;
+				let result : u32 = sum * num;
+				return result;
+			}
+		}
+	}
 
 	return 0;
 }
