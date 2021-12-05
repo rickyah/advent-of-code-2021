@@ -44,7 +44,7 @@ pub fn parser(input: &str) -> Input {
 	for line in lines {
 		// We'll count if we have read 25 numbers to
 		//  determine that a board card is completed
-		if line.is_empty() {continue;}
+		if line.is_empty() { continue; }
 		
 		// read the first 5 numbers
 		let numbers_in_line : Vec<u8> = line
@@ -203,8 +203,7 @@ const INPUT_LITERAL : &str = "7,4,9,5,11,17,23,2,0,14,21,24,10,16,13,6,15,25,12,
  2  0 12  3  7";
 
 	#[test]
-	fn test_day4_parse()
-	{
+	fn test_day4_parse() {
 		let input = parser(&INPUT_LITERAL);
 
 		assert_eq!(input.drawn_numbers, vec![7,4,9,5,11,17,23,2,0,14,21,24,10,16,13,6,15,25,12,22,18,20,8,19,3,26,1]);
