@@ -20,6 +20,38 @@ pub struct Input {
 	numbers_in_cards : HashMap<u8, Vec<(BoardIndex, PositionInBoardIndex)>>
 }
 
+// Notes on marking the numbres in the bingo card
+// ----------------------------------------------
+// I choose to represent the action to mark a number in a bingo card using
+// a u32 number, to allow checking if a card is completed faster.
+// Each bit is a number position in the bingo board. I consider the position 0
+// the value in a bingo card in top left, increasing from left to right, top to
+// bottom:
+//
+//  0  1  2  3  4
+//  5  6  7  8  9
+// 10 11 12 13 14
+// 15 16 17 18 19
+// 20 21 22 23 24
+//
+// LSB in the mark represents position 0 of the bingo card, next LSB represents
+// position 1, t c.
+// A bingo board has 5x5=25 positions so last 7 MSB are unused.
+
+// Notes on checking a completed bingo card
+// -----------------------------------------
+// We only need to check if a row or column is completely marked, we don't need
+// the actual number values. As the marked numbers are represented by a u32 
+// number, we can use bit masks to check it with just one comparison
+
+// Mask for rows is: 
+// 0b00000000_00000000_00000000_00011111 for row 0
+// and we shift the bytes to the left by *five* for each row
+
+// Mask for colums is: 
+// 0b00000000_00010000_10000100_00100001 for column 0
+// and we shift the bits to the left by *one* for each column
+
 
 #[aoc_generator(day4)]
 pub fn parser(input: &str) -> Input {
