@@ -4,7 +4,6 @@ use std::collections::HashMap;
 
 //  https://adventofcode.com/2021/day/5
 
-
 #[derive(PartialEq, Eq, Hash, Debug)]
 pub struct Point {
 	x: u32,
@@ -40,50 +39,75 @@ pub fn parser(input: &str) -> Input{
 	return Input { lines: lines };
 }
 
-#[aoc(day5, part1)]
-pub fn solve_part1(input: &Input) -> u32 {
-	let lines : Vec<&Line> = input.lines.iter()
-		.filter(|line| line.p1.x == line.p2.x || line.p1.y == line.p2.y)
-		.collect();
-	
+fn compute_frequencies(lines: &Vec<&Line>) -> HashMap<Point, u32> {
 	let mut points_freq : HashMap<Point, u32> = HashMap::new();
 	for line in lines {
 		let p = Point {x: line.p1.x, y: line.p1.y};
 		points_freq.entry(p).and_modify(|f| *f +=1).or_insert(1);
 		
-		
 		let x_steps = line.p2.x as i32 - line.p1.x as i32;
-		let x_inc:i32 = if x_steps < 0 {-1} else {1};
+		let x_inc:i32 = if x_steps < 0 {-1} else if x_steps > 0 {1} else {0};
 		let x_steps = i32::abs(x_steps);
 
-		for step in 1..=x_steps {
-			let x : i32 = line.p1.x as i32 + (x_inc * step);
-			let p = Point {x: x as u32, y: line.p1.y};
-			points_freq.entry(p).and_modify(|f| *f +=1).or_insert(1);
-		}
-
 		let y_steps : i32 = line.p2.y as i32 - line.p1.y as i32;
-		let y_inc:i32 = if y_steps < 0 {-1} else {1};
+		let y_inc:i32 = if y_steps < 0 {-1} else if y_steps > 0 {1} else {0};
 		let y_steps = i32::abs(y_steps);
 
-		for step in 1..=y_steps {
-			let y : i32 = line.p1.y as i32 + (y_inc * step);
-			let p = Point {x: line.p1.x, y: y as u32};
-			points_freq.entry(p).and_modify(|f| *f +=1).or_insert(1);
-		}
-	}
-	
+		let steps = std::cmp::max(x_steps, y_steps);
 
+		for step in 1..=steps {
+			let x : i32 = line.p1.x as i32 + (x_inc * step);
+			let y : i32 = line.p1.y as i32 + (y_inc * step);
+			let p = Point {x: x as u32, y: y as u32,};
+			points_freq.entry(p).and_modify(|f| *f +=1).or_insert(1);
+		} 
+	}
+	return points_freq;
+}
+
+fn compute_points(points_freq: &HashMap<Point, u32>) -> u32 {
 	let v : Vec<&Point> = points_freq.iter()
 		.filter_map(|(key, &val)| if val >= 2 { Some(key) } else { None })	
 		.collect();
 	let result = v.len() as u32;
-	return result; 
+	return result;
 }
+#[aoc(day5, part1)]
+pub fn solve_part1(input: &Input) -> u32 {
+
+	fn filter_line(line : &Line) -> bool {
+		return line.p1.x == line.p2.x || line.p1.y == line.p2.y;
+	}
+
+	let lines : Vec<&Line> = input.lines.iter()
+		.filter(|line| filter_line(line) )
+		.collect();
+	
+	let points_freq: HashMap<Point, u32> = compute_frequencies(&lines);
+
+	return compute_points(&points_freq);
+}
+
 
 #[aoc(day5, part2)]
 pub fn solve_part2(input: &Input) -> u32 {
-	return 0;
+
+	fn filter_line(line : &Line) -> bool {
+		let x_coord_delta = i32::abs(line.p2.x as i32 - line.p1.x as i32);
+		let y_coord_delta = i32::abs(line.p2.y as i32 - line.p1.y as i32);
+
+		return line.p1.x == line.p2.x 
+			|| line.p1.y == line.p2.y 
+			|| x_coord_delta == y_coord_delta;
+	}
+
+	let lines : Vec<&Line> = input.lines.iter()
+	.filter(|line| filter_line(line) )
+	.collect();
+	
+	let points_freq: HashMap<Point, u32> = compute_frequencies(&lines);
+
+	return compute_points(&points_freq);
 }
 
 #[cfg(test)]
@@ -120,7 +144,9 @@ mod tests {
 	
 	#[test]
 	fn test_day5_part2() {
-		assert!(false);
-	}
+		let input = parser(INPUT_LITERAL);
+		let result = solve_part2(&input);
 
+		assert_eq!(result, 12);
+	}
 }
