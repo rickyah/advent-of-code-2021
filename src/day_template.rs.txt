@@ -3,7 +3,7 @@ use aoc_runner_derive::aoc_generator;
 
 //  https://adventofcode.com/2021/day/0
 
-pub struct input {
+pub struct Input {
 
 }
 
@@ -12,14 +12,11 @@ pub fn parser(input: &str) -> Input{
 	return 0;
 }
 
-// How many measurements are larger than the previous measurement?
 #[aoc(day0, part1)]
 pub fn solve_part1(input: &Input) -> u32 {
 	return 0 
 }
 
-// Consider sums of a three-measurement sliding window. 
-// How many sums are larger than the previous sum?
 #[aoc(day0, part2)]
 pub fn solve_part2(input: &Input) -> u32 {
 	return 0;
