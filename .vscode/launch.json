@@ -22,6 +22,29 @@
 			},
 			"args": [],
 			"cwd": "${workspaceFolder}"
+		},
+
+		{
+			"type": "lldb",
+			"request": "launch",
+			"name": "Debug aoc-2021",
+			"cargo": {
+				"args": [
+					"build",
+					"--manifest-path=./target/aoc/aoc-autobuild/Cargo.toml",
+					"--bin=aoc-autobuild",
+				],
+				// "filter": {
+				// 	"name": "aoc-2021",
+				// 	"kind": "lib"
+				// }
+			},
+			"args": [],
+			"stopAtEntry": false,
+			"cwd": "${workspaceFolder}",
+			"environment": [],
+			"externalConsole": false
+		
 		}
 	]
 }
