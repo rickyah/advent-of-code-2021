@@ -1,19 +1,13 @@
 use aoc_runner_derive::aoc;
 use aoc_runner_derive::aoc_generator;
-use std::collections::VecDeque;
 use std::collections::HashMap;
 
-//  https://adventofcode.com/2021/day/6
+// https://adventofcode.com/2021/day/6
 
 pub struct Input {
-	start_days_until_spawn: Vec<u8>
+	population: Vec<u8>
 }
 
-#[derive(Debug, PartialEq, Hash, Eq, Clone, Copy)]
-pub struct FishGrowthModelInput {
-	days_until_spawn: u8,
-	start_day: u16, 
-}
 
 #[aoc_generator(day6)]
 pub fn parser(input: &str) -> Input{
@@ -21,131 +15,167 @@ pub fn parser(input: &str) -> Input{
 		.map(|f| u8::from_str_radix(f, 10).unwrap())
 		.collect();
 
-	return Input{start_days_until_spawn: population};
+	return Input{population: population};
 }
 
 #[aoc(day6, part1)]
 pub fn solve_part1(input: &Input) -> u64 {
-	let mut input_population : Vec<FishGrowthModelInput> = Vec::new();
-
-	for days_until_spawn in &input.start_days_until_spawn {
-		input_population.push(FishGrowthModelInput{
-			days_until_spawn: *days_until_spawn,
-			start_day: 0		});
-	}
-	
-	let result = fish_growth_simulator(input_population, 80_u16);
-	return result;
+	return solver_optimized_hashmap(&input.population, 80);
 }
 
 #[aoc(day6, part2)]
 pub fn solve_part2(input: &Input) -> u64 {
-	let mut input_population : Vec<FishGrowthModelInput> = Vec::new();
-
-	for days_until_spawn in &input.start_days_until_spawn {
-		input_population.push(FishGrowthModelInput{
-			days_until_spawn: *days_until_spawn,
-			start_day: 0});
-	}
-	
-	let result = fish_growth_simulator(input_population, 256_u16);
-	return result;
+	return solver_optimized_hashmap(&input.population, 256);
 }
 
-fn fish_growth_simulator(initial_population: Vec<FishGrowthModelInput>, days: u16) -> u64 {
-	let mut fishes_to_simulate : VecDeque<FishGrowthModelInput> = VecDeque::new();
+pub fn solver_unoptimized(initial_population:&Vec<u8>, days:u16) -> u64{
+	// I did not came out with this specific solution.
+	// Mine was way more code, but similar in terms of speed and memory.
+	// I came across this one while searching for help for the part 2, and
+	// liked its simplicitly. 
+	// https://www.youtube.com/watch?v=fHlWM8CIrlI
 
-	for fish in initial_population {
-		fishes_to_simulate.push_back(fish);
-	}
-	
-	
-	let result = simulate_fish_growth(&mut fishes_to_simulate, days);
-	
-	// let result = simulate_fish_growth_uncached(&mut fishes_to_simulate, days);
-	
-	return result;
-}
+	// Explanation: each element in the vector is a fish, and the value is 
+	// the days they have until they shouls create another fish.
+	// Each day we iterate for all the population decreasing the count of 
+	// days.
+	// Whe decreasing the counter of fish with a value of 0, we instead
+	// reset the counter back to 6 and add another fish with a value of 8.
+	// After all the iterations, the size of the vector is the total population
+	// generated.
 
-fn simulate_fish_growth(fishes: &mut VecDeque<FishGrowthModelInput>, total_days: u16) -> u64 {
-	let mut fish_count =  0_u64;
+	// This is not valid for part2, because for higher iteration numbers and due
+	// to the nature of this exponential growth, you end up with a 
+	// massive vector (hundreds of billions of entries) which is time cosuming to iterate, 
+	// and also takes probably more memory than your system has
+	// (1billion bytes == 1GB)
 
-	let mut cache : HashMap<FishGrowthModelInput, Vec<FishGrowthModelInput>> = HashMap::new();
+	// Bench data:
+	// AOC 2021
+	// Day 6 - Part 1 : 360268
+	// generator: 20.3µs,
+	// runner: 13.8707ms
+	//
+	// Day 6 - Part 2 : N/A
 
-	while !fishes.is_empty() {
-		if let Some(fish) = fishes.pop_front() {
-			
-			if let Some(generated_fishes) = cache.get(&fish) {
-				let new_fishes = generated_fishes;
+	let mut population = initial_population.clone();
+	for _ in 0..days {
+		let mut population_tmp : Vec<u8> = Vec::new();
 
-				fish_count += 1;
-
-				for new_fish in new_fishes {
-					fishes.push_back(*new_fish);
-				}
-
-			} else {
-				let new_fishes = simulate_new_fishes_from(fish, total_days);
-
-				fish_count += 1;
-
-				for new_fish in &new_fishes {
-					fishes.push_back(new_fish.clone());
-				}
-
-				cache.insert(fish, new_fishes);
+		for fish in population {
+			if fish == 0 {
+				population_tmp.push(6);
+				population_tmp.push(8);
 			}
-
-		}
-	};
-
-	return fish_count;
-}
-
-fn simulate_fish_growth_uncached(fishes: &mut VecDeque<FishGrowthModelInput> , days: u16) -> u64 {
-	let mut fish_count =  0_u64;
-
-	while !fishes.is_empty() {
-		if let Some(fish) = fishes.pop_front() {
-			let new_fishes = simulate_new_fishes_from(fish, days);
-			
-			fish_count += 1;
-
-			for new_fish in new_fishes {
-				fishes.push_back(new_fish);
+			else {
+				population_tmp.push(fish-1);
 			}
-		}
-	};
-
-	return fish_count;
-}
-
-
-fn simulate_new_fishes_from(fish:FishGrowthModelInput, max_day: u16) ->  Vec<FishGrowthModelInput> {
-	let mut current_day = fish.start_day;
-	let mut days_until_spawn = fish.days_until_spawn ; //as i16;
-	let mut new_fishes : Vec<FishGrowthModelInput> = Vec::new();
-
-	while current_day <= max_day {
-		
-		if days_until_spawn == 0 {
-			days_until_spawn = 6; 
-			if current_day + 1 <= max_day {	
-				new_fishes.push(FishGrowthModelInput{
-					days_until_spawn: 8,
-					start_day: current_day + 1
-				});
-			}
-		} else {
-			days_until_spawn -= 1;
 		}
 		
-		current_day += 1;
+		population = population_tmp;
 	}
 
-	return new_fishes;
+	return population.len() as u64;
 }
 
+pub fn solver_optimized(initial_population:&Vec<u8>, days: u16) -> u64 {
+
+	// This was implemented after checking a proper solution. I did spent quite
+	// some time thinking in a way to improve my original algorith, however the 
+	// solution was more in the line of seen the problem with other eyes.
+
+	// The idea is that tracking the number of fishes we count the fishes in the 
+	// same state (the counter when the fish should spawn a new own)
+	// Every fish in the same state behaves the same, so we can basically just treat
+	// all the fishes in the same state as a whole. 
+	// Each fish, then, belongs to a bucket: one for every possible count number
+	// the fish can have (0..8, so 9 buckets in total)
+	// Then, if we want to decrease the counter of the fishes that have 3 days 
+	// to spawn new fishes, we just move the number of fishes from bucket 3 to 
+	// bucket 2.
+	// The exception is bucket 0, that requires to move the fishes to bucket 6
+	// and add an equal amount of fishes to bucket 8 (the newly generated)
+		
+	// I've changed the solution to use a vector instead of a hashmap, gaining
+	// some performance.
+
+	// Bench data:
+	// AOC 2021
+	// Day 6 - Part 1 : 360268
+	// 		generator: 34.6µs,
+	// 		runner: 10.2µs
+	
+	// Day 6 - Part 2 : 1632146183902
+	// 		generator: 15.3µs,
+	// 		runner: 25.9µs
+	
+	let mut population : Vec<u64> = vec![0;9];
+	
+	for count in initial_population {
+		population[*count as usize] += 1;
+	}
+
+	for _ in 0..days {
+		
+		// let mut population_tmp : HashMap<u8, u64> = HashMap::new();
+		// for (idx, count) in &population  { population_tmp.insert(*idx, 0); }
+		let mut population_tmp = vec![0;9];
+
+		for (idx, count) in population.iter().enumerate() {
+			if idx == 0 {
+				population_tmp[6] += count;
+				population_tmp[8] += count;
+			}
+			else {
+				population_tmp[idx-1] += count;
+			} 
+		}
+
+		population = population_tmp;
+	}
+
+	return population.iter().fold(0, |acc, v| acc + v) as u64;
+}
+	
+pub fn solver_optimized_hashmap(initial_population:&Vec<u8>, days: u16) -> u64 {
+
+	// same as solver_optimized but using a hashmap instead of a vector
+
+	// Bench data:
+	// AOC 2021
+	// Day 6 - Part 1 : 360268
+	// 		generator: 42.9µs,
+	// 		runner: 188.8µs
+	
+	// Day 6 - Part 2 : 1632146183902
+	// 		generator: 13.4µs,
+	// 		runner: 240.7µs
+	let mut population : HashMap<u8, u64> =  HashMap::new();
+	
+	for count in initial_population {
+		let _ = *population.entry(*count).and_modify(|v| *v += 1).or_insert(1);
+	}
+
+	for _ in 0..days {
+		
+		let mut population_tmp : HashMap<u8, u64> = HashMap::new();
+		for idx in population.keys() { population_tmp.insert(*idx, 0); }
+
+		for (idx, count) in &population {
+			if *idx == 0 {
+				population_tmp.entry(6).and_modify(|v| *v += count).or_insert(*count);
+				population_tmp.entry(8).and_modify(|v| *v += count).or_insert(*count);
+			}
+			else {
+				population_tmp.entry(idx-1).and_modify(|v| *v += count).or_insert(*count);
+			} 
+		}
+
+		population = population_tmp;
+	}
+
+	return population.values().fold(0, |acc, v| acc + v) as u64;
+}
 
 #[cfg(test)]
 mod tests {
@@ -153,99 +183,19 @@ mod tests {
 
 	const INPUT_LITERAL : &str = "3,4,3,1,2";
  
+
 	#[test]
-	fn test_1() {
-		let fish = FishGrowthModelInput{
-			days_until_spawn: 3,
-			start_day: 0
-		};
-
-		let result = simulate_new_fishes_from(fish, 18);
-
-		assert_eq!(result.len(), 3);
-		assert_eq!(result[0], FishGrowthModelInput{ days_until_spawn: 8, start_day: 4});
-		assert_eq!(result[1], FishGrowthModelInput{ days_until_spawn: 8, start_day: 11} );
-		assert_eq!(result[2], FishGrowthModelInput{ days_until_spawn: 8, start_day: 18} );
-		
-	}
-	#[test]
-	fn test_2() {
-		let mut fishes_to_simulate : VecDeque<FishGrowthModelInput> = VecDeque::new();
-
-		fishes_to_simulate.push_back(FishGrowthModelInput{
-			days_until_spawn: 3,
-			start_day: 0
-		});
-
-		fishes_to_simulate.push_back(FishGrowthModelInput{
-			days_until_spawn: 4,
-			start_day: 0
-		});
-
-		fishes_to_simulate.push_back(FishGrowthModelInput{
-			days_until_spawn: 3,
-			start_day: 0
-		});
-
-		fishes_to_simulate.push_back(FishGrowthModelInput{
-			days_until_spawn: 1,
-			start_day: 0
-		});
-
-		fishes_to_simulate.push_back(FishGrowthModelInput{
-			days_until_spawn: 2,
-			start_day: 0
-		});
-		
-		let days = 18_u16;
-		let result = simulate_fish_growth(&mut fishes_to_simulate, days);
-
-		assert_eq!(result, 26);
-	}
-	
-	#[test]
-	fn test_3() {
-		let mut fishes_to_simulate : VecDeque<FishGrowthModelInput> = VecDeque::new();
-
-		fishes_to_simulate.push_back(FishGrowthModelInput{
-			days_until_spawn: 3,
-			start_day: 0
-		});
-
-		fishes_to_simulate.push_back(FishGrowthModelInput{
-			days_until_spawn: 4,
-			start_day: 0
-		});
-		let days = 18_u16;
-		let result = simulate_fish_growth(&mut fishes_to_simulate, days);
-
-		assert_eq!(result, 9);
-	}
-	// #[test]
 	fn test_day6_part1() {
 		let input = parser(INPUT_LITERAL);
-		let result = solve_part1(&input);
+		let result = solver_optimized(&input.population, 80);
 		assert_eq!(result, 5934);
 	}
 
 	#[test]
 	fn test_day6_part2() {
 		let input = parser(INPUT_LITERAL);
-		let result = solve_part2(&input);
+		let result = solver_optimized(&input.population, 256);
 		assert_eq!(result, 26984457539);
 	}
-
-
-	#[test]
-	fn test_cache() {
-		let mut cache : HashMap<FishGrowthModelInput, u64> = HashMap::new();
-		
-		cache.insert(FishGrowthModelInput{days_until_spawn: 3, start_day: 8}, 3);
-
-		assert_eq!(cache.contains_key(&FishGrowthModelInput{days_until_spawn: 3, start_day: 8}), true);
-		assert_eq!(cache.contains_key(&FishGrowthModelInput{days_until_spawn: 2, start_day: 8}), false);
-		assert_eq!(cache.contains_key(&FishGrowthModelInput{days_until_spawn: 3, start_day: 1}), false);
-	}
-
 	
 }
