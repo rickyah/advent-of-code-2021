@@ -1,38 +1,41 @@
 use aoc_runner_derive::aoc;
 use aoc_runner_derive::aoc_generator;
+use std::collections::hash_set;
 
 // https://adventofcode.com/2021/day/8
 
 pub struct Input{
-	signals: Vec<String>,
-	digits: Vec<String>
+	signals:Vec<Vec<String>>,
+	digits: Vec<Vec<String>>
 }
 
 #[aoc_generator(day8)]
 pub fn parser(input: &str) -> Input{
-	let mut d : Vec<String> = Vec::new();
-	let mut s : Vec<String> = Vec::new();
+	let mut signals : Vec<Vec<String>> = Vec::new();
+	let mut digits : Vec<Vec<String>> = Vec::new();
 	
 	for line in input.lines() {
 		let mut parts = line.split("|");
+		let line_signals = parts.next().unwrap().split_whitespace().map(String::from).collect();
+		let line_digits = parts.next().unwrap().split_whitespace().map(String::from).collect();
 		
-		s.push(String::from(parts.next().unwrap()));
-		d.push(String::from(parts.next().unwrap()));
+		signals.push(line_signals);
+		digits.push(line_digits);
 	}
 
 	return Input { 
-		signals: s,
-		digits: d
+		signals: signals,
+		digits: digits
 	}
 }
 
 #[aoc(day8, part1)]
 pub fn solve_part1(input: &Input) -> u32 {
 	let mut count = 0;
-	for digit_4 in &input.digits {
+	for vec_4_digits in &input.digits {
 
-		for digit_1 in digit_4.split_whitespace() {
-			let char_count = digit_1.chars().count();
+		for digit in vec_4_digits {
+			let char_count = digit.chars().count();
 			match char_count {
 				2 | 3 | 4 | 7 => count += 1,
 				_ => ()
