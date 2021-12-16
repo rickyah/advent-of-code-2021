@@ -7,17 +7,17 @@ pub struct Input {
 
 }
 
-#[aoc_generator(day0)]
+#[aoc_generator(day/0)]
 pub fn parser(input: &str) -> Input{
 	return Input {};
 }
 
-#[aoc(day0, part1)]
+#[aoc(day/0, part1)]
 pub fn solve_part1(input: &Input) -> u32 {
 	return 0;
 }
 
-// #[aoc(day0, part2)]
+// #[aoc(day/0, part2)]
 // pub fn solve_part2(input: &Input) -> u32 {
 // 	return 0;
 // }
@@ -26,19 +26,19 @@ mod tests {
 	use super::*;
 
 	const INPUT_LITERAL : &str = "";
- 
+
 	#[test]
-	fn test_day0_part1() {
+	fn test_day/0_part1() {
 		let input = parser(INPUT_LITERAL);
 		let result = solve_part1(&input);
 		assert_eq!(result, []);
 	}
 
 //	#[test]
-//	fn test_day0_part2() {
+//	fn test_day/0_part2() {
 //		let input = parser(INPUT_LITERAL);
 //		let result = solve_part2(&input);
 //		assert_eq!(result, []);
 //	}
-	
+
 }
