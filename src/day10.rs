@@ -45,6 +45,39 @@ pub fn solve_part1(input: &Input) -> u32 {
 	return result;
 }
 
+#[aoc(day10, part2)]
+pub fn solve_part2(input: &Input) -> u64 {
+	let filtered : Vec<&String> = input.lines.iter()
+		.filter( |l| check_line_invalid(&l) == None)
+		.collect();
+
+	let completion_sequences : Vec<Vec<char>> = filtered.iter()
+		.map(|line| get_completion_sequence(&line) )
+		.collect();
+
+	fn get_points(c :&char) -> u64 {
+		return match c {
+			')' => 1,
+			']' => 2,
+			'}' => 3,
+			'>' => 4,
+			_ => 0
+		}
+	}
+
+	let mut points : Vec<u64> = completion_sequences.iter().map(|sequence| {
+		sequence.iter().fold(0_u64, |acc, c| (acc * 5) + get_points(c))
+	})
+	.collect();
+
+	points.sort();
+
+	let middle = points.len() / 2;
+	let result = points[middle];
+
+	return result;
+}
+
 fn check_line_invalid(line: &String) -> Option<char> {
 	let mut stack : Vec<char> = Vec::new();
 	for c in line.chars() {
@@ -67,10 +100,33 @@ fn check_line_invalid(line: &String) -> Option<char> {
 	None
 }
 
+fn get_completion_sequence(line: &String) -> Vec<char> {
+	let mut stack : Vec<char> = Vec::new();
+	for c in line.chars() {
 
-#[aoc(day10, part2)]
-pub fn solve_part2(input: &Input) -> u32 {
-	return 0;
+		match c {
+			'{' | '[' | '(' | '<' => stack.push(c),
+			'}' | ']' | ')' | '>' => { stack.pop(); () },
+			_ => ()
+		}
+	}
+
+	fn get_replacement(c: &char) -> Option<char> {
+		return match c {
+			'{' => Some('}'),
+			'[' => Some(']'),
+			'(' => Some(')'),
+			'<' => Some('>'),
+			_ => None
+		}
+	}
+
+	stack.reverse();
+	for c in stack.iter_mut() {
+		*c = get_replacement(&*c).unwrap();
+	}
+
+	return stack;
 }
 
 mod tests {
@@ -102,4 +158,23 @@ mod tests {
 		assert_eq!(result, 288957);
 	}
 
+	#[test]
+	fn tt() {
+		let v = [']', ')', ')', ')', '}', '}', '}', '}', ']', ')', '>', '>', '}', ')'];
+fn get_points(c :&char) -> u32 {
+		return match c {
+			')' => 1,
+			']' => 2,
+			'}' => 3,
+			'>' => 4,
+			_ => 0
+		}
+	}
+		let mut result = 0;
+		for e in v {
+			result *= 5;
+			result += get_points(&e);
+		}
+		println!("{}", result);
+	}
 }
